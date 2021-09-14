@@ -127,23 +127,3 @@ if __name__ == '__main__':
     main(verbose=True)
 else:
     main(verbose=False)
-
-# -------------------------MEDIUM DETAILS OF TRANSACTIONS-------------------------
-# for key, value in get_address_details('1P5ZEDWTKTFGxQjZphgWPQUpe554WKDfHQ', before_bh=682694).items():
-#     if key == 'txrefs':
-#         print('-----------------------------', key, '-----------------------------')
-#         for item_in_out in value:
-#             for key_in_out, value_in_out in item_in_out.items():
-#                 print('\t', key_in_out, ' : ', value_in_out)
-#             print()
-#     else:
-#         print(key, ' : ', value)
-
-# -------------------------DETAILS OF SPECIFIC TRANSACTIONS-------------------------
-# for key, value in get_transaction_details('1740788991aeb5bdf65dc53e72f4bb0af581558ef461392db448bb89b2d0afb2').items():
-#     print(key, ' : ', value)
-#
-# print()
-#
-# for key, value in get_transaction_details('477d19ee2cfc1e9942a7dc6bc70f953b7c5bd22daf4b5fd82c1cba43202cc58c').items():
-#     print(key, ' : ', value)
