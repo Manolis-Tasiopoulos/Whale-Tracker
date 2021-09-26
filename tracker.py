@@ -1,5 +1,5 @@
 from decimal import Decimal
-import datetime
+import datetime as dt
 
 from blockcypher import get_address_full
 
@@ -32,33 +32,31 @@ def calculate_total(tx_item, address, is_sent_tx=None):
                         total_satoshi -= outputs_dict['value']
                     else:
                         total_satoshi += outputs_dict['value']
-    print('Total Satoshi: ', total_satoshi)
     convert_to_decimal = Decimal(total_satoshi / pow(10, 8))
     return convert_to_decimal
 
 
 def bitcoin_price(time=None):
     start = time
-    end = start + datetime.timedelta(hours=1)
+    end = start + dt.timedelta(hours=1)
 
     data = yf.download(tickers="BTC-USD", start=start, end=end, interval="1m", progress=False)
     data = data.iloc[-1].tolist()
 
     return data[3]
 
+
 # -------------------------FULL DETAILS OF TRANSACTIONS-------------------------
 def main(verbose):
     address = '1P5ZEDWTKTFGxQjZphgWPQUpe554WKDfHQ'
-    txs = get_address_full(txn_limit=2, address=address)
+    txs = get_address_full(txn_limit=4, address=address)
     balance = txs['final_balance']
-
+    tx_date = dt
     position_in_transactions = 0
     temp_btc_value = 0
-    total_btc = 0
-    tx_type = ''
+    dollar_price = 0
 
-    crypto_currency = 'BTC'
-    against_currency = 'USD'
+    tx_type = ''
 
     is_next_block_same = False
 
@@ -104,25 +102,24 @@ def main(verbose):
                     print('Sent BTC: ', total_btc)
 
             tx_date = txs['txs'][position_in_transactions]['confirmed']
-            tx_date = tx_date + datetime.timedelta(hours=3)
+            tx_date = tx_date + dt.timedelta(hours=3)
 
             dollar_price = bitcoin_price(time=tx_date)
 
-            print(dollar_price)
+            tx_date = tx_date.strftime('%d-%m-%Y %H:%M')
 
         if total_btc != 0:
             transactions.append({'block': txs['txs'][position_in_transactions]['block_height'],
                                  'time': tx_date,
                                  'type': tx_type,
-                                 'amount': total_btc,
-                                 'BTC price': int(dollar_price),
-                                 '($) total cost: ': int(dollar_price * int(total_btc))})
+                                 'amount (BTC)': total_btc,
+                                 'BTC price ($)': int(dollar_price),
+                                 'total cost ($): ': float(dollar_price * float(total_btc))})
 
         position_in_transactions += 1
         is_next_block_same = False
         if verbose:
-            print(
-                "\n=========================================================================================================================================================\n")
+            print("\n=========================================================================================================================================================\n")
 
     for key, value in transactions[1].items():
         if verbose:
