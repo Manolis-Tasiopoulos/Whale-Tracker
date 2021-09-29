@@ -33,7 +33,8 @@ def calculate_total(tx_item, address, is_sent_tx=None):
                     else:
                         total_satoshi += outputs_dict['value']
     convert_to_decimal = Decimal(total_satoshi / pow(10, 8))
-    return convert_to_decimal
+    amount = round(convert_to_decimal,10)
+    return float(amount)
 
 
 def bitcoin_price(time=None):
@@ -121,9 +122,12 @@ def main(verbose):
         if verbose:
             print("\n=========================================================================================================================================================\n")
 
-    for key, value in transactions[1].items():
+    for tx in transactions:
+        for key, value in tx.items():
+            if verbose:
+                print('\t', key, ' : ', value)
         if verbose:
-            print('\t', key, ' : ', value)
+            print()
 
 
 transactions = []
