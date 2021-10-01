@@ -2,7 +2,7 @@ import tracker
 import csv
 
 
-def update_csv(block_number):
+def update_csv(block_number, tracker_transactions):
     missing_txs = []
     new_tx_row = []
 
@@ -19,23 +19,25 @@ def update_csv(block_number):
         for row in missing_txs:
             writer.writerow(row)
 
-    f.close()
 
-
-if __name__ == '__main__':
-
-    file = open('Transactions.csv')
-    dataset_csv = csv.reader(file)
-    next(dataset_csv)
-
-    tracker_transactions = tracker.transactions
+def main(verbose):
+    missing_tx = []
     all_transactions = []
 
     csv_last_blocks = []
     tracker_blocks = []
 
-    for row in dataset_csv:
-        all_transactions.append(row)
+    tracker_transactions = tracker.main(verbose=False)
+    balance = "{:,}".format(tracker_transactions[-1])
+    del tracker_transactions[-1]
+
+    with open('Transactions.csv') as file:
+        dataset_csv = csv.reader(file)
+
+        next(dataset_csv)
+
+        for row in dataset_csv:
+            all_transactions.append(row)
 
     all_transactions.reverse()
 
@@ -45,8 +47,6 @@ if __name__ == '__main__':
         temp = all_transactions[i][0::-6]
         csv_last_blocks.append(int(temp[0]))
 
-    file.close()
-
     for tx in tracker_transactions:
         tracker_blocks.append(tx['block'])
 
@@ -54,10 +54,19 @@ if __name__ == '__main__':
 
     for i in range(tx_num):
         if tracker_blocks[i] not in csv_last_blocks:
-            print('---NEW TRANSACTION---')
+            if verbose:
+                print('---NEW TRANSACTION---')
             for tx in tracker_transactions:
                 for key, value in tx.items():
                     if tx['block'] == tracker_blocks[i]:
-                        print('\t', key, ' : ', value)
+                        missing_tx.append({key: value})
+                        if verbose:
+                            print('\t', key, ' : ', value)
 
-            update_csv(tracker_blocks[i])
+            update_csv(tracker_blocks[i], tracker_transactions)
+
+            return missing_tx
+
+
+if __name__ == '__main__':
+    main(True)

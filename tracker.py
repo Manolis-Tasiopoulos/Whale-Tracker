@@ -33,8 +33,7 @@ def calculate_total(tx_item, address, is_sent_tx=None):
                     else:
                         total_satoshi += outputs_dict['value']
     convert_to_decimal = Decimal(total_satoshi / pow(10, 8))
-    amount = round(convert_to_decimal,10)
-    return float(amount)
+    return convert_to_decimal
 
 
 def bitcoin_price(time=None):
@@ -51,30 +50,25 @@ def bitcoin_price(time=None):
 def main(verbose):
     address = '1P5ZEDWTKTFGxQjZphgWPQUpe554WKDfHQ'
     txs = get_address_full(txn_limit=4, address=address)
-    balance = txs['final_balance']
+    balance_btc = txs['final_balance'] / 100
     tx_date = dt
     position_in_transactions = 0
-    temp_btc_value = 0
     dollar_price = 0
-
-    tx_type = ''
-
+    transactions = []
     is_next_block_same = False
 
     for item in txs['txs']:
 
         total_btc = calculate_total(item, address, is_sent_tx=sent_tx(item, address))
-        total_btc += temp_btc_value
-        temp_btc_value = 0
 
-        if position_in_transactions < len(txs['txs']) - 1:
-            if txs['txs'][position_in_transactions]['block_height'] == txs['txs'][position_in_transactions + 1]['block_height']:
-                if verbose:
-                    print('-----------------------------Skipping Double Block-----------------------------')
-                is_next_block_same = True
-                temp_btc_value = total_btc
-                if verbose:
-                    print(temp_btc_value)
+        if position_in_transactions < len(txs['txs']) - 1 and txs['txs'][position_in_transactions]['block_height'] == \
+                txs['txs'][position_in_transactions + 1]['block_height']:
+            if verbose:
+                print('-----------------------------Skipping Double Block-----------------------------')
+            is_next_block_same = True
+            temp_btc_value = total_btc
+            if verbose:
+                print(float(temp_btc_value))
 
         if is_next_block_same is False:
             for key, value in item.items():
@@ -110,29 +104,37 @@ def main(verbose):
             tx_date = tx_date.strftime('%d-%m-%Y %H:%M')
 
         if total_btc != 0:
+            total_btc = round(total_btc, 10)
+            total_btc = ('%f' % total_btc).rstrip('.0')
+
+            total_cost = float(dollar_price * float(total_btc))
+            total_cost = ('%f' % total_cost).rstrip('.0')
+
             transactions.append({'block': txs['txs'][position_in_transactions]['block_height'],
                                  'time': tx_date,
                                  'type': tx_type,
                                  'amount (BTC)': total_btc,
                                  'BTC price ($)': int(dollar_price),
-                                 'total cost ($): ': float(dollar_price * float(total_btc))})
+                                 'total cost ($)': total_cost})
 
         position_in_transactions += 1
         is_next_block_same = False
         if verbose:
-            print("\n=========================================================================================================================================================\n")
+            print(
+                "\n=========================================================================================================================================================\n")
 
-    for tx in transactions:
+    transactions.append(balance_btc)
+
+    for tx in transactions[:-1]:
         for key, value in tx.items():
             if verbose:
                 print('\t', key, ' : ', value)
         if verbose:
             print()
 
+    return transactions
 
-transactions = []
 
 if __name__ == '__main__':
     main(verbose=True)
-else:
-    main(verbose=False)
+
