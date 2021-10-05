@@ -49,7 +49,7 @@ def bitcoin_price(time=None):
 # -------------------------FULL DETAILS OF TRANSACTIONS-------------------------
 def main(verbose):
     address = '1P5ZEDWTKTFGxQjZphgWPQUpe554WKDfHQ'
-    txs = get_address_full(txn_limit=4, address=address)
+    txs = get_address_full(api_key='67e4493f3db6482f92f4cab7b12618e3', txn_limit=4, address=address)
     balance_btc = txs['final_balance'] / 100
     tx_date = dt
     position_in_transactions = 0
