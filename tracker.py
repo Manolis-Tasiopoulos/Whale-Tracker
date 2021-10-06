@@ -46,12 +46,33 @@ def bitcoin_price(time=None):
     return data[3]
 
 
+def refine_txs(transactions):
+
+    doubles_indexes = []
+
+    for i in range(1, len(transactions)):
+        if transactions[i]['block'] == transactions[i - 1]['block']:
+
+            transactions[i]['amount (BTC)'] += transactions[i - 1]['amount (BTC)']
+            transactions[i]['total cost ($)'] += transactions[i - 1]['total cost ($)']
+
+            doubles_indexes.append(i - 1)
+
+    for double in doubles_indexes:
+        del transactions[double]
+
+    for tx in transactions:
+        tx['amount (BTC)'] = ('%f' % tx['amount (BTC)']).rstrip('.0')
+        tx['total cost ($)'] = ('%f' % tx['total cost ($)']).rstrip('.0')
+
+    return transactions
+
+
 # -------------------------FULL DETAILS OF TRANSACTIONS-------------------------
 def main(verbose):
     address = '1P5ZEDWTKTFGxQjZphgWPQUpe554WKDfHQ'
     txs = get_address_full(api_key='67e4493f3db6482f92f4cab7b12618e3', txn_limit=4, address=address)
     balance_btc = txs['final_balance'] / 100
-    tx_date = dt
     position_in_transactions = 0
     dollar_price = 0
     transactions = []
@@ -85,6 +106,8 @@ def main(verbose):
                     if verbose:
                         print(key, ' : ', value)
 
+        if total_btc != 0 and txs['txs'][position_in_transactions]['confirmations'] != 0:
+
             if sent_tx(item, address) is True:
                 tx_type = 'SELL'
                 if verbose:
@@ -103,12 +126,9 @@ def main(verbose):
 
             tx_date = tx_date.strftime('%d-%m-%Y %H:%M')
 
-        if total_btc != 0:
             total_btc = round(total_btc, 10)
-            total_btc = ('%f' % total_btc).rstrip('.0')
 
             total_cost = float(dollar_price * float(total_btc))
-            total_cost = ('%f' % total_cost).rstrip('.0')
 
             transactions.append({'block': txs['txs'][position_in_transactions]['block_height'],
                                  'time': tx_date,
@@ -122,6 +142,8 @@ def main(verbose):
         if verbose:
             print(
                 "\n=========================================================================================================================================================\n")
+
+    transactions = refine_txs(transactions)
 
     transactions.append(balance_btc)
 
