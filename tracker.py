@@ -127,15 +127,16 @@ def main(verbose):
             tx_date = tx_date.strftime('%d-%m-%Y %H:%M')
 
             total_btc = round(total_btc, 10)
-
             total_cost = float(dollar_price * float(total_btc))
 
-            transactions.append({'block': txs['txs'][position_in_transactions]['block_height'],
-                                 'time': tx_date,
-                                 'type': tx_type,
-                                 'amount (BTC)': total_btc,
-                                 'BTC price ($)': int(dollar_price),
-                                 'total cost ($)': total_cost})
+            if total_cost > 100.0:
+
+                transactions.append({'block': txs['txs'][position_in_transactions]['block_height'],
+                                     'time': tx_date,
+                                     'type': tx_type,
+                                     'amount (BTC)': total_btc,
+                                     'BTC price ($)': int(dollar_price),
+                                     'total cost ($)': total_cost})
 
         position_in_transactions += 1
         is_next_block_same = False
