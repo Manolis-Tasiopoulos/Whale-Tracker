@@ -72,7 +72,7 @@ disp = updater.dispatcher
 
 chat_ids = []
 
-updater.job_queue.run_repeating(check_address, 10)
+updater.job_queue.run_repeating(check_address, 240)
 
 updater.dispatcher.add_handler(CommandHandler('start', start))
 updater.dispatcher.add_handler(CommandHandler('stop', stop))
