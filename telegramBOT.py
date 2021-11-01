@@ -1,6 +1,10 @@
+import scanner
+import os.path
+
 from datetime import datetime
 from telegram.ext import Updater, CommandHandler
-import scanner
+from os import path
+
 
 starting_time = datetime.now()
 starting_hour = int(starting_time.strftime("%H"))
@@ -9,22 +13,23 @@ starting_hour = int(starting_time.strftime("%H"))
 def check_address(context):
     now = datetime.now()
     now_hour = int(now.strftime("%H"))
-    # print(starting_hour, ' ', now_hour)
+    now_hour = 13
+    print(starting_hour, ' ', now_hour)
 
     if now_hour > starting_hour:
-        # print('Complete')
+        print('Complete')
         missing_transactions = scanner.main(verbose=False)
         str_tx = ''
 
         if missing_transactions is None:
             missing_transactions = []
 
-        # print(missing_transactions)
+        print(missing_transactions)
         if len(missing_transactions) != 0:
             str_tx = '---NEW TRANSACTION---\n\n'
             for tx in missing_transactions:
                 for key, value in tx.items():
-                    # print('\t', key, ' : ', value)
+                    print('\t', key, ' : ', value)
                     str_tx += key + ': ' + str(value)
 
                     if key != 'total cost ($)':
@@ -45,17 +50,37 @@ def start(update, context):
 
 
 def stop(update, context):
-    update.message.reply_text("Stopped! You will no longer receiving ny new transaction of the whale")
-    chat_ids.remove(update.message.chat_id)
+    chat_id = update.message.chat_id
+    chat_id = str(chat_id)
+
+    if chat_id in chat_ids:
+        with open("chat_ids.txt", "r") as f:
+            lines = f.readlines()
+        with open("chat_ids.txt", "w") as f:
+            for line in lines:
+                if line.strip("\n") != chat_id:
+                    f.write(line)
+
+        chat_ids.remove(chat_id)
+        update.message.reply_text("Stopped! You will no longer receiving ny new transaction of the whale")
+        print(chat_ids)
+    else:
+        update.message.reply_text("First you have to start receiving new whales transactions. Click-type: /check")
 
 
 def check(update, context):
     chat_id = update.message.chat_id
+    chat_id = str(chat_id)
 
     if chat_id not in chat_ids:
-        chat_ids.append(chat_id)
+        with open("chat_ids.txt", 'a') as file:
+            file.write(chat_id+'\n')
 
-    update.message.reply_text("Start monitoring...")
+        chat_ids.append(chat_id)
+        update.message.reply_text("Start monitoring...")
+        print(chat_ids)
+    else:
+        update.message.reply_text("You are already monitoring...")
 
 
 def admin_users(update, context):
@@ -65,14 +90,27 @@ def admin_users(update, context):
 
 
 with open('token.txt', 'r') as f:
-    TOKEN = f.read()
+    TOKEN = f.readline()
+
 
 updater = Updater(TOKEN, use_context=True)
 disp = updater.dispatcher
 
 chat_ids = []
 
-updater.job_queue.run_repeating(check_address, 240)
+if not path.exists("chat_ids.txt"):
+    with open("chat_ids.txt", 'x') as f:
+        f.write('')
+
+else:
+    with open("chat_ids.txt") as f:
+        lines = f.readlines()
+        print(lines)
+        chat_ids = [line.rstrip() for line in lines]
+
+print(chat_ids)
+
+updater.job_queue.run_repeating(check_address, interval=30)
 
 updater.dispatcher.add_handler(CommandHandler('start', start))
 updater.dispatcher.add_handler(CommandHandler('stop', stop))

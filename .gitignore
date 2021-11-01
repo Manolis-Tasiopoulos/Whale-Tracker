@@ -133,3 +133,4 @@ dmypy.json
 .pyre/
 
 /token.txt
+/chat_ids.txt
