@@ -13,18 +13,17 @@ starting_hour = int(starting_time.strftime("%H"))
 def check_address(context):
     now = datetime.now()
     now_hour = int(now.strftime("%H"))
-    now_hour = 13
-    print(starting_hour, ' ', now_hour)
+    # print(starting_hour, ' ', now_hour)
 
-    if now_hour > starting_hour:
-        print('Complete')
+    if now_hour > starting_hour or (starting_hour == 23 and now_hour < 1):
+        # print('Complete')
         missing_transactions = scanner.main(verbose=False)
         str_tx = ''
 
         if missing_transactions is None:
             missing_transactions = []
 
-        print(missing_transactions)
+        # print(missing_transactions)
         if len(missing_transactions) != 0:
             str_tx = '---NEW TRANSACTION---\n\n'
             for tx in missing_transactions:
@@ -41,7 +40,7 @@ def check_address(context):
 
 
 def start(update, context):
-    update.message.reply_text("""Helo ! Welcome to WhaleTrackerBot. \n\nThis bot will check if the biggest bitcoin whale is adding or removing btc from its wallet.
+    update.message.reply_text("""Hello ! Welcome to WhaleTrackerBot. \n\nThis bot will check if the biggest bitcoin whale is adding or removing btc from its wallet.
        
 * To start receiving new whales transactions click-type: /check 
     
