@@ -131,6 +131,5 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-
-/token.txt
+/tokens.py
 /chat_ids.txt

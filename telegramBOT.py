@@ -1,5 +1,5 @@
 import scanner
-import os.path
+import tokens
 
 from datetime import datetime
 from telegram.ext import Updater, CommandHandler
@@ -89,11 +89,7 @@ def admin_users(update, context):
     update.message.reply_text(str(users_count) + " active user(s)")
 
 
-with open('token.txt', 'r') as f:
-    TOKEN = f.readline()
-
-
-updater = Updater(TOKEN, use_context=True)
+updater = Updater(tokens.Telegram_token, use_context=True)
 disp = updater.dispatcher
 
 chat_ids = []

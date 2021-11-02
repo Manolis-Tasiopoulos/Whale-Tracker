@@ -1,9 +1,9 @@
-from decimal import Decimal
 import datetime as dt
+import yfinance as yf
+import tokens
 
 from blockcypher import get_address_full
-
-import yfinance as yf
+from decimal import Decimal
 
 
 def sent_tx(tx_item, address):
@@ -38,21 +38,22 @@ def calculate_total(tx_item, address, is_sent_tx=None):
 
 def bitcoin_price(time=None):
     start = time
-    end = start + dt.timedelta(hours=1)
+    end = time + dt.timedelta(minutes=1)
 
-    data = yf.download(tickers="BTC-USD", start=start, end=end, interval="1m", progress=False)
-    data = data.iloc[-1].tolist()
+    try:
+        data = yf.download(tickers="BTC-USD", start=start, end=end, interval="1m", progress=False, show_errors=True)
+        data = data.iloc[-1].tolist()
 
-    return data[3]
+        return data[1]
+    except IndexError:
+        return 0
 
 
 def refine_txs(transactions):
-
     doubles_indexes = []
 
     for i in range(1, len(transactions)):
         if transactions[i]['block'] == transactions[i - 1]['block']:
-
             transactions[i]['amount (BTC)'] += transactions[i - 1]['amount (BTC)']
             transactions[i]['total cost ($)'] += transactions[i - 1]['total cost ($)']
 
@@ -71,10 +72,9 @@ def refine_txs(transactions):
 # -------------------------FULL DETAILS OF TRANSACTIONS-------------------------
 def main(verbose):
     address = '1P5ZEDWTKTFGxQjZphgWPQUpe554WKDfHQ'
-    txs = get_address_full(api_key='67e4493f3db6482f92f4cab7b12618e3', txn_limit=4, address=address)
+    txs = get_address_full(api_key=tokens.BlockCypher_token, txn_limit=4, address=address)
     balance_btc = txs['final_balance'] / 100
     position_in_transactions = 0
-    dollar_price = 0
     transactions = []
     is_next_block_same = False
 
@@ -120,7 +120,6 @@ def main(verbose):
                     print('Sent BTC: ', total_btc)
 
             tx_date = txs['txs'][position_in_transactions]['confirmed']
-            tx_date = tx_date + dt.timedelta(hours=3)
 
             dollar_price = bitcoin_price(time=tx_date)
 
@@ -130,7 +129,6 @@ def main(verbose):
             total_cost = float(dollar_price * float(total_btc))
 
             if total_cost > 100.0:
-
                 transactions.append({'block': txs['txs'][position_in_transactions]['block_height'],
                                      'time': tx_date,
                                      'type': tx_type,
@@ -160,4 +158,3 @@ def main(verbose):
 
 if __name__ == '__main__':
     main(verbose=True)
-
