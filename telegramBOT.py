@@ -22,7 +22,6 @@ def check_address(context):
         if missing_transactions is None:
             missing_transactions = []
 
-        logging.debug('Transactions:', missing_transactions)
         if len(missing_transactions) != 0:
             str_tx = '---NEW TRANSACTION---\n\n'
             for tx in missing_transactions:
