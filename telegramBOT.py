@@ -1,3 +1,4 @@
+import logging
 import scanner
 import tokens
 
@@ -5,25 +6,23 @@ from datetime import datetime
 from telegram.ext import Updater, CommandHandler
 from os import path
 
-
-starting_time = datetime.now()
-starting_hour = int(starting_time.strftime("%H"))
+starting_hour = datetime.now()
+starting_hour_int = int(starting_hour.strftime("%H"))
 
 
 def check_address(context):
     now = datetime.now()
-    now_hour = int(now.strftime("%H"))
-    # print(starting_hour, ' ', now_hour)
+    now_hour_int = int(now.strftime("%H"))
 
-    if now_hour > starting_hour or (starting_hour == 23 and now_hour < 1):
-        # print('Complete')
+    if now_hour_int > starting_hour_int or (starting_hour_int == 23 and now_hour_int < 1):
+
         missing_transactions = scanner.main(verbose=False)
         str_tx = ''
 
         if missing_transactions is None:
             missing_transactions = []
 
-        # print(missing_transactions)
+        logging.debug('Transactions:', missing_transactions)
         if len(missing_transactions) != 0:
             str_tx = '---NEW TRANSACTION---\n\n'
             for tx in missing_transactions:
@@ -37,6 +36,9 @@ def check_address(context):
         if str_tx != '':
             for chat_id in chat_ids:
                 context.bot.send_message(chat_id=chat_id, text=str_tx)
+    else:
+        remain_min = 60 - now.minute
+        print('Starting at:', remain_min, 'minutes')
 
 
 def start(update, context):
@@ -73,7 +75,7 @@ def check(update, context):
 
     if chat_id not in chat_ids:
         with open("chat_ids.txt", 'a') as file:
-            file.write(chat_id+'\n')
+            file.write(chat_id + '\n')
 
         chat_ids.append(chat_id)
         update.message.reply_text("Start monitoring...")
@@ -88,9 +90,13 @@ def admin_users(update, context):
     update.message.reply_text(str(users_count) + " active user(s)")
 
 
+logging.basicConfig(filename='logging_telegramBOT.log', level=logging.DEBUG,
+                    format='%(asctime)s %(levelname)s: %(message)s', )
+
+print("Starting Telegram Bot...")
+
 updater = Updater(tokens.Telegram_token, use_context=True)
 disp = updater.dispatcher
-
 chat_ids = []
 
 if not path.exists("chat_ids.txt"):
@@ -100,12 +106,11 @@ if not path.exists("chat_ids.txt"):
 else:
     with open("chat_ids.txt") as f:
         lines = f.readlines()
-        print(lines)
         chat_ids = [line.rstrip() for line in lines]
 
-print(chat_ids)
+print('Active users chat ID\'s:', chat_ids)
 
-updater.job_queue.run_repeating(check_address, interval=30)
+updater.job_queue.run_repeating(check_address, interval=60)
 
 updater.dispatcher.add_handler(CommandHandler('start', start))
 updater.dispatcher.add_handler(CommandHandler('stop', stop))
