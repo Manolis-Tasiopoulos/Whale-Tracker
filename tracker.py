@@ -63,6 +63,7 @@ def refine_txs(transactions):
         del transactions[double]
 
     for tx in transactions:
+        tx['time'] = tx['time'].strftime('%d-%m-%Y %H:%M')
         tx['amount (BTC)'] = ('%f' % tx['amount (BTC)']).rstrip('.0')
         tx['total cost ($)'] = ('%f' % tx['total cost ($)']).rstrip('.0')
 
@@ -121,14 +122,12 @@ def main(verbose):
 
             tx_date = txs['txs'][position_in_transactions]['confirmed']
 
-            dollar_price = bitcoin_price(time=tx_date)
+            if total_btc > 1:
+                dollar_price = bitcoin_price(time=tx_date)
 
-            tx_date = tx_date.strftime('%d-%m-%Y %H:%M')
+                total_btc = round(total_btc, 10)
+                total_cost = float(dollar_price * float(total_btc))
 
-            total_btc = round(total_btc, 10)
-            total_cost = float(dollar_price * float(total_btc))
-
-            if total_cost > 100.0:
                 transactions.append({'block': txs['txs'][position_in_transactions]['block_height'],
                                      'time': tx_date,
                                      'type': tx_type,
