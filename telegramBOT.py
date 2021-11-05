@@ -6,15 +6,26 @@ from datetime import datetime
 from telegram.ext import Updater, CommandHandler
 from os import path
 
-starting_hour = datetime.now()
-starting_hour_int = int(starting_hour.strftime("%H"))
 
-
-def check_address(context):
+def time_check():
     now = datetime.now()
     now_hour_int = int(now.strftime("%H"))
 
     if now_hour_int > starting_hour_int or (starting_hour_int == 23 and now_hour_int < 1):
+        global starting_hour
+        starting_hour = -1
+
+        return False
+    else:
+        remain_min = 60 - now.minute
+        print('Starting at:', remain_min, 'minutes')
+
+        return True
+
+
+def check_address(context):
+
+    if time_check() is False:
 
         missing_transactions = scanner.main(verbose=False)
         str_tx = ''
@@ -35,9 +46,6 @@ def check_address(context):
         if str_tx != '':
             for chat_id in chat_ids:
                 context.bot.send_message(chat_id=chat_id, text=str_tx)
-    else:
-        remain_min = 60 - now.minute
-        print('Starting at:', remain_min, 'minutes')
 
 
 def start(update, context):
@@ -93,6 +101,9 @@ logging.basicConfig(filename='logging_telegramBOT.log', level=logging.DEBUG,
                     format='%(asctime)s %(levelname)s: %(message)s', )
 
 print("Starting Telegram Bot...")
+
+starting_hour = datetime.now()
+starting_hour_int = int(starting_hour.strftime("%H"))
 
 updater = Updater(tokens.Telegram_token, use_context=True)
 disp = updater.dispatcher
