@@ -12,8 +12,8 @@ def time_check():
     now_hour_int = int(now.strftime("%H"))
 
     if now_hour_int > starting_hour_int or (starting_hour_int == 23 and now_hour_int < 1):
-        global starting_hour
-        starting_hour = -1
+        global starting_hour_int
+        starting_hour_int = -1
 
         return False
     else:
