@@ -8,11 +8,11 @@ from os import path
 
 
 def time_check():
+    global starting_hour_int
     now = datetime.now()
     now_hour_int = int(now.strftime("%H"))
 
     if now_hour_int > starting_hour_int or (starting_hour_int == 23 and now_hour_int < 1):
-        global starting_hour_int
         starting_hour_int = -1
 
         return False
