@@ -1,5 +1,7 @@
 import tracker
 import csv
+import yfinance as yf
+import datetime as dt
 
 
 def update_csv(block_number, tracker_transactions):
@@ -20,6 +22,40 @@ def update_csv(block_number, tracker_transactions):
             writer.writerow(row)
 
 
+def get_bitcoin_price(time=None):
+    start = time
+    end = time + dt.timedelta(minutes=1)
+
+    try:
+        data = yf.download(tickers="BTC-USD", start=start, end=end, interval="1m", progress=False, show_errors=True)
+        data = data.iloc[-1].tolist()
+
+        return data[1]
+    except IndexError:
+        return 0
+
+
+def refine_txs(transactions):
+    doubles_indexes = []
+
+    for i in range(1, len(transactions)):
+        if transactions[i]['block'] == transactions[i - 1]['block']:
+            transactions[i]['amount (BTC)'] += transactions[i - 1]['amount (BTC)']
+            transactions[i]['total cost ($)'] += transactions[i - 1]['total cost ($)']
+
+            doubles_indexes.append(i - 1)
+
+    for double in doubles_indexes:
+        del transactions[double]
+
+    for tx in transactions:
+        tx['time'] = tx['time'].strftime('%d-%m-%Y %H:%M')
+        tx['amount (BTC)'] = ('%f' % tx['amount (BTC)']).rstrip('.0')
+        tx['total cost ($)'] = ('%f' % tx['total cost ($)']).rstrip('.0')
+
+    return transactions
+
+
 def main(verbose):
     missing_tx = []
     all_transactions = []
@@ -28,7 +64,7 @@ def main(verbose):
     tracker_blocks = []
 
     tracker_transactions = tracker.main(verbose=False)
-    balance = "{:,}".format(tracker_transactions[-1])
+
     del tracker_transactions[-1]
 
     with open('Transactions.csv') as file:
@@ -63,6 +99,14 @@ def main(verbose):
                         if verbose:
                             print('\t', key, ' : ', value)
 
+                dollar_price = get_bitcoin_price(time=tx['time'])
+                total_btc = round(tx['amount (BTC)'], 10)
+                total_cost = float(dollar_price * float(total_btc))
+
+                tx['BTC price ($)'] = dollar_price
+                tx['total cost ($)'] = total_cost
+
+            tracker_transactions = refine_txs(tracker_transactions)
             update_csv(tracker_blocks[i], tracker_transactions)
 
             return missing_tx

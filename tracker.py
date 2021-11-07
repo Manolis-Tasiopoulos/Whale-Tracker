@@ -1,5 +1,3 @@
-import datetime as dt
-import yfinance as yf
 import tokens
 
 from blockcypher import get_address_full
@@ -34,40 +32,6 @@ def calculate_total(tx_item, address, is_sent_tx=None):
                         total_satoshi += outputs_dict['value']
     convert_to_decimal = Decimal(total_satoshi / pow(10, 8))
     return convert_to_decimal
-
-
-def bitcoin_price(time=None):
-    start = time
-    end = time + dt.timedelta(minutes=1)
-
-    try:
-        data = yf.download(tickers="BTC-USD", start=start, end=end, interval="1m", progress=False, show_errors=True)
-        data = data.iloc[-1].tolist()
-
-        return data[1]
-    except IndexError:
-        return 0
-
-
-def refine_txs(transactions):
-    doubles_indexes = []
-
-    for i in range(1, len(transactions)):
-        if transactions[i]['block'] == transactions[i - 1]['block']:
-            transactions[i]['amount (BTC)'] += transactions[i - 1]['amount (BTC)']
-            transactions[i]['total cost ($)'] += transactions[i - 1]['total cost ($)']
-
-            doubles_indexes.append(i - 1)
-
-    for double in doubles_indexes:
-        del transactions[double]
-
-    for tx in transactions:
-        tx['time'] = tx['time'].strftime('%d-%m-%Y %H:%M')
-        tx['amount (BTC)'] = ('%f' % tx['amount (BTC)']).rstrip('.0')
-        tx['total cost ($)'] = ('%f' % tx['total cost ($)']).rstrip('.0')
-
-    return transactions
 
 
 # -------------------------FULL DETAILS OF TRANSACTIONS-------------------------
@@ -123,25 +87,17 @@ def main(verbose):
             tx_date = txs['txs'][position_in_transactions]['confirmed']
 
             if total_btc > 1:
-                dollar_price = bitcoin_price(time=tx_date)
-
-                total_btc = round(total_btc, 10)
-                total_cost = float(dollar_price * float(total_btc))
 
                 transactions.append({'block': txs['txs'][position_in_transactions]['block_height'],
                                      'time': tx_date,
                                      'type': tx_type,
-                                     'amount (BTC)': total_btc,
-                                     'BTC price ($)': int(dollar_price),
-                                     'total cost ($)': total_cost})
+                                     'amount (BTC)': total_btc})
 
         position_in_transactions += 1
         is_next_block_same = False
         if verbose:
             print(
                 "\n=========================================================================================================================================================\n")
-
-    transactions = refine_txs(transactions)
 
     transactions.append(balance_btc)
 
