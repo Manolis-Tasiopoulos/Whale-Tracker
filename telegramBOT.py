@@ -28,14 +28,13 @@ def check_address(context):
     if time_check() is False:
 
         missing_transactions = scanner.main(verbose=False)
-        str_tx = ''
 
         if missing_transactions is None:
             missing_transactions = []
 
         if len(missing_transactions) != 0:
-            str_tx = '---NEW TRANSACTION---\n\n'
             for tx in missing_transactions:
+                str_tx = '---NEW TRANSACTION---\n\n'
                 for key, value in tx.items():
                     print('\t', key, ' : ', value)
                     str_tx += key + ': ' + str(value)
@@ -43,9 +42,10 @@ def check_address(context):
                     if key != 'total cost ($)':
                         str_tx += '\n'
 
-        if str_tx != '':
-            for chat_id in chat_ids:
-                context.bot.send_message(chat_id=chat_id, text=str_tx)
+                if str_tx != '':
+                    for chat_id in chat_ids:
+                        context.bot.send_message(chat_id=chat_id, text=str_tx)
+                print()
 
 
 def start(update, context):
