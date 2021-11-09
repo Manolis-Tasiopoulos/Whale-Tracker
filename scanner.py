@@ -96,18 +96,24 @@ def main(verbose):
                 for key, value in tx.items():
                     if tx['block'] == tracker_blocks[i]:
                         missing_tx.append({key: value})
-                        if verbose:
-                            print('\t', key, ' : ', value)
 
                 dollar_price = get_bitcoin_price(time=tx['time'])
                 total_btc = round(tx['amount (BTC)'], 10)
                 total_cost = float(dollar_price * float(total_btc))
+
+                missing_tx.append({'BTC price ($)': dollar_price})
+                missing_tx.append({'total cost ($)': total_cost})
 
                 tx['BTC price ($)'] = dollar_price
                 tx['total cost ($)'] = total_cost
 
             tracker_transactions = refine_txs(tracker_transactions)
             update_csv(tracker_blocks[i], tracker_transactions)
+
+            if verbose:
+                for tx in tracker_transactions:
+                    for key, value in tx.items():
+                        print('\t', key, ' : ', value)
 
             return missing_tx
 
