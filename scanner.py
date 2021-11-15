@@ -4,15 +4,16 @@ import yfinance as yf
 import datetime as dt
 
 
-def update_csv(missing_tx):
-    missing_txs_row = []
+def update_csv(missing_txs):
 
-    for key, value in missing_tx.items():
-        missing_txs_row.append(value)
+    for tx in missing_txs:
+        missing_txs_row = []
+        for key, value in tx.items():
+            missing_txs_row.append(value)
 
-    with open('Transactions.csv', 'a', newline='') as f:
-        writer = csv.writer(f)
-        writer.writerow(missing_txs_row)
+        with open('Transactions.csv', 'a', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(missing_txs_row)
 
 
 def get_bitcoin_price(time=None):
@@ -28,33 +29,33 @@ def get_bitcoin_price(time=None):
         return 0
 
 
-def refine_tx(transaction):
-    # If problem occurred with double transactions
-    # doubles_indexes = []
-    #
-    # for i in range(1, len(transactions)):
-    #     if transactions[i]['block'] == transactions[i - 1]['block']:
-    #         transactions[i]['amount (BTC)'] += transactions[i - 1]['amount (BTC)']
-    #         transactions[i]['total cost ($)'] += transactions[i - 1]['total cost ($)']
-    #
-    #         doubles_indexes.append(i - 1)
-    #
-    # for double in doubles_indexes:
-    #     del transactions[double]
+def refine_tx(transactions):
+    doubles_indexes = []
 
-    transaction['time'] = transaction['time'].strftime('%d-%m-%Y %H:%M')
-    transaction['amount (BTC)'] = ('%f' % transaction['amount (BTC)']).rstrip('.0')
-    transaction['total cost ($)'] = ('%f' % transaction['total cost ($)']).rstrip('.0')
+    for i in range(1, len(transactions)):
+        if transactions[i]['block'] == transactions[i - 1]['block']:
+            transactions[i]['amount (BTC)'] += transactions[i - 1]['amount (BTC)']
+            transactions[i]['total cost ($)'] += transactions[i - 1]['total cost ($)']
 
-    return transaction
+            doubles_indexes.append(i - 1)
+
+    for double in doubles_indexes:
+        del transactions[double]
+
+    for tx in transactions:
+        tx['time'] = tx['time'].strftime('%d-%m-%Y %H:%M')
+        tx['amount (BTC)'] = ('%f' % tx['amount (BTC)']).rstrip('.0')
+        tx['total cost ($)'] = ('%f' % tx['total cost ($)']).rstrip('.0')
+
+    transactions.reverse()
+
+    return transactions
 
 
 def main(verbose):
     missing_txs = []
     all_transactions = []
-
     csv_last_blocks = []
-    tracker_blocks = []
 
     tracker_transactions = tracker.main(verbose=False)
 
@@ -77,34 +78,30 @@ def main(verbose):
         csv_last_blocks.append(int(temp[0]))
 
     for tx in tracker_transactions:
-        tracker_blocks.append(tx['block'])
+        if tx['block'] not in csv_last_blocks:
+            temp = {}
 
-    tracker_blocks.reverse()
+            for key, value in tx.items():
+                temp[key] = value
 
-    for i in range(tx_num):
-        if tracker_blocks[i] not in csv_last_blocks:
+            dollar_price = get_bitcoin_price(time=tx['time'])
+            total_btc = round(tx['amount (BTC)'], 10)
+            total_cost = float(dollar_price * float(total_btc))
 
-            for tx in tracker_transactions:
-                temp = {}
-                if tx['block'] == tracker_blocks[i]:
-                    if verbose:
-                        print('---NEW TRANSACTION---')
-                    for key, value in tx.items():
-                        temp[key] = value
-                        if verbose:
-                            print('\t', key, ' : ', value)
-                    if verbose:
-                        print()
-                    dollar_price = get_bitcoin_price(time=tx['time'])
-                    total_btc = round(tx['amount (BTC)'], 10)
-                    total_cost = float(dollar_price * float(total_btc))
+            temp.update({'BTC price ($)': dollar_price,
+                         'total cost ($)': total_cost})
 
-                    temp.update({'BTC price ($)': dollar_price,
-                                 'total cost ($)': total_cost})
+            missing_txs.append(temp)
 
-                    temp = refine_tx(temp)
-                    update_csv(temp)
-                    missing_txs.append(temp)
+    missing_txs = refine_tx(missing_txs)
+    update_csv(missing_txs)
+
+    if verbose:
+        for tx in missing_txs:
+            print('---NEW TRANSACTION---')
+            for key, value in tx.items():
+                print('\t', key, ' : ', value)
+            print()
 
     return missing_txs
 
