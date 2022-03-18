@@ -70,7 +70,7 @@ def stop(update, context):
                     f.write(line)
 
         chat_ids.remove(chat_id)
-        update.message.reply_text("Stopped! You will no longer receiving ny new transaction of the whale")
+        update.message.reply_text("Stopped! You will no longer receiving new transaction of the whale")
         print(chat_ids)
     else:
         update.message.reply_text("First you have to start receiving new whales transactions. Click-type: /check")
