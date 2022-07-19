@@ -107,6 +107,7 @@ def main(verbose):
                 print('\t', key, ' : ', value)
         if verbose:
             print()
+            
 
     return transactions
 
