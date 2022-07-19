@@ -97,6 +97,7 @@ def main(verbose):
     update_csv(missing_txs)
 
     if verbose:
+        #newTransaction
         for tx in missing_txs:
             print('---NEW TRANSACTION---')
             for key, value in tx.items():
