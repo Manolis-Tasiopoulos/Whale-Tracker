@@ -3,6 +3,7 @@ import tokens
 from blockcypher import get_address_full
 from decimal import Decimal
 
+address = '1P5ZEDWTKTFGxQjZphgWPQUpe554WKDfHQ'
 
 def sent_tx(tx_item, address):
     for tx_key, tx_value in tx_item.items():
@@ -36,7 +37,6 @@ def calculate_total(tx_item, address, is_sent_tx=None):
 
 # -------------------------FULL DETAILS OF TRANSACTIONS-------------------------
 def main(verbose):
-    address = '1P5ZEDWTKTFGxQjZphgWPQUpe554WKDfHQ'
     txs = get_address_full(api_key=tokens.BlockCypher_token, txn_limit=4, address=address)
     balance_btc = txs['final_balance'] / 100
     position_in_transactions = 0
