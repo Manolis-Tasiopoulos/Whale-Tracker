@@ -1,11 +1,16 @@
 import logging
 import scanner
-import tokens
+import os
 
+from dotenv import load_dotenv
 from datetime import datetime
 from telegram.ext import Updater, CommandHandler
 from os import path
 
+load_dotenv()
+telegram_token = os.getenv('TELEGRAM_TOKEN')
+if telegram_token is None:
+    raise EnvironmentError('TELEGRAM_TOKEN is not set in .env file')
 
 def time_check():
     global starting_hour_int
@@ -105,7 +110,7 @@ print("Starting Telegram Bot...")
 starting_hour = datetime.now()
 starting_hour_int = int(starting_hour.strftime("%H"))
 
-updater = Updater(tokens.Telegram_token, use_context=True)
+updater = Updater(telegram_token, use_context=True)
 disp = updater.dispatcher
 chat_ids = []
 
