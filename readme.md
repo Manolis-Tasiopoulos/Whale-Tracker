@@ -34,26 +34,27 @@ Before running the script, make sure you have the following:
 This will install the necessary libraries, including:
 
 -`requests` for making HTTP requests.
+
 -`blockcypher`: A Python library for interacting with BlockCypher's API, which provides tools for working with blockchain data and networks like Bitcoin.
+
 -`yfinance`: A Python library used for downloading historical market data from Yahoo Finance, including cryptocurrency prices and split data.
+
 -`python_telegram_bot`: A library for building Telegram bots in Python.
+
 -`telegram`: A Python interface for the Telegram Bot API.
+
 -`pandas`: A powerful data analysis and manipulation library for Python, widely used for data preprocessing, cleaning, analysis, and visualization in tabular form.
 
 ## Usage
 1. Open the `tracker.py` file and fill out the following placeholders with appropriate values:
 
    - `address`: Replace `'1P5ZEDWTKTFGxQjZphgWPQUpe554WKDfHQ'` with the actual address you want to get updates for any buy/sell moves in the future.
-   - `headers`: Fill out the `"cookie"` and `"User-Agent"` fields with the appropriate values for your use case.
 
-2. Create a `tokens.py` file and fill out the following placeholders with appropriate values:
+2. Create a `.env` file based on `.env.example` and fill out the following placeholders with appropriate values:
 
    ```bash
-   def BlockCypher_token():
-    return 'YOUR_BLOCKCYPHER_TOKEN'
-
-   def Telegram_token():
-    return 'YOUR_TELEGRAM_TOKEN'
+   BlockCypher_token = "your_token_here"
+   Telegram_token = "your_api_key_here"
    ```
 3. Run the script:
 
