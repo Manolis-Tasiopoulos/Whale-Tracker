@@ -4,7 +4,7 @@ import os
 
 from dotenv import load_dotenv
 from datetime import datetime
-from telegram.ext import Updater, CommandHandler
+from telegram.ext import CommandHandler, Application
 from os import path
 
 load_dotenv()
@@ -12,7 +12,17 @@ telegram_token = os.getenv('TELEGRAM_TOKEN')
 if telegram_token is None:
     raise EnvironmentError('TELEGRAM_TOKEN is not set in .env file')
 
-def time_check():
+chat_ids = []
+
+if not path.exists("chat_ids.txt"):
+    with open("chat_ids.txt", 'x') as f:
+        f.write('')
+else:
+    with open("chat_ids.txt") as f:
+        lines = f.readlines()
+        chat_ids = [line.rstrip() for line in lines]
+
+async def time_check():
     global starting_hour_int
     now = datetime.now()
     now_hour_int = int(now.strftime("%H"))
@@ -28,9 +38,9 @@ def time_check():
         return True
 
 
-def check_address(context):
+async def check_address(context):
 
-    if time_check() is False:
+    if await time_check() is False:
 
         missing_transactions = scanner.main(verbose=False)
 
@@ -53,8 +63,8 @@ def check_address(context):
                 print()
 
 
-def start(update, context):
-    update.message.reply_text("""Hello ! Welcome to WhaleTrackerBot. \n\nThis bot will check if the biggest bitcoin whale is adding or removing btc from its wallet.
+async def start(update, context):
+    await update.message.reply_text("""Hello ! Welcome to WhaleTrackerBot. \n\nThis bot will check if the biggest bitcoin whale is adding or removing btc from its wallet.
        
 * To start receiving new whales transactions click-type: /check 
     
@@ -62,7 +72,7 @@ def start(update, context):
     """)
 
 
-def stop(update, context):
+async def stop(update, context):
     chat_id = update.message.chat_id
     chat_id = str(chat_id)
 
@@ -75,13 +85,13 @@ def stop(update, context):
                     f.write(line)
 
         chat_ids.remove(chat_id)
-        update.message.reply_text("Stopped! You will no longer receiving new transaction of the whale")
+        await update.message.reply_text("Stopped! You will no longer receiving new transaction of the whale")
         print(chat_ids)
     else:
-        update.message.reply_text("First you have to start receiving new whales transactions. Click-type: /check")
+        await update.message.reply_text("First you have to start receiving new whales transactions. Click-type: /check")
 
 
-def check(update, context):
+async def check(update, context):
     chat_id = update.message.chat_id
     chat_id = str(chat_id)
 
@@ -90,47 +100,32 @@ def check(update, context):
             file.write(chat_id + '\n')
 
         chat_ids.append(chat_id)
-        update.message.reply_text("Start monitoring...")
+        await update.message.reply_text("Start monitoring...")
         print(chat_ids)
     else:
-        update.message.reply_text("You are already monitoring...")
+        await update.message.reply_text("You are already monitoring...")
 
 
-def admin_users(update, context):
+async def admin_users(update, context):
     users_count = len(chat_ids)
 
-    update.message.reply_text(str(users_count) + " active user(s)")
+    await update.message.reply_text(str(users_count) + " active user(s)")
 
+def main():
+    # logging.basicConfig(filename='logging_telegramBOT.log', level=logging.DEBUG,
+                        # format='%(asctime)s %(levelname)s: %(message)s', )
+    
+    print("Starting Telegram Bot...")
+    app = Application.builder().token(telegram_token).build()
 
-logging.basicConfig(filename='logging_telegramBOT.log', level=logging.DEBUG,
-                    format='%(asctime)s %(levelname)s: %(message)s', )
+    app.add_handler(CommandHandler('start', start))
+    app.add_handler(CommandHandler('stop', stop))
+    app.add_handler(CommandHandler('check', check))
+    app.add_handler(CommandHandler('admin_users', admin_users))
 
-print("Starting Telegram Bot...")
+    print('Polling...')
+    app.run_polling(poll_interval=3)
 
-starting_hour = datetime.now()
-starting_hour_int = int(starting_hour.strftime("%H"))
-
-updater = Updater(telegram_token, use_context=True)
-disp = updater.dispatcher
-chat_ids = []
-
-if not path.exists("chat_ids.txt"):
-    with open("chat_ids.txt", 'x') as f:
-        f.write('')
-
-else:
-    with open("chat_ids.txt") as f:
-        lines = f.readlines()
-        chat_ids = [line.rstrip() for line in lines]
-
-print('Active users chat ID\'s:', chat_ids)
-
-updater.job_queue.run_repeating(check_address, interval=60)
-
-updater.dispatcher.add_handler(CommandHandler('start', start))
-updater.dispatcher.add_handler(CommandHandler('stop', stop))
-updater.dispatcher.add_handler(CommandHandler('check', check))
-updater.dispatcher.add_handler(CommandHandler('admin_users', admin_users))
-
-updater.start_polling()
-updater.idle()
+    
+if __name__ == '__main__':
+    main()
